@@ -84,6 +84,63 @@ def plot_actions(actions, instruction, episode_name, output_path):
     print(f"Plot saved to {output_path}")
 
 
+def plot_robot_obs(robot_obs, instruction, episode_name, output_path):
+    """Plots the robot observations and saves the plot as a png."""
+    fig, axs = plt.subplots(5, 1, figsize=(12, 20), dpi=300, sharex=True)
+
+    tcp_position = robot_obs[:, 0:3]
+    tcp_orientation = robot_obs[:, 3:6]
+    gripper_width = robot_obs[:, 6]
+    arm_joint_states = robot_obs[:, 7:14]
+    gripper_action = robot_obs[:, 14]
+
+    time_steps = np.arange(tcp_position.shape[0])
+
+    axs[0].plot(time_steps, tcp_position[:, 0], label="X")
+    axs[0].plot(time_steps, tcp_position[:, 1], label="Y")
+    axs[0].plot(time_steps, tcp_position[:, 2], label="Z")
+    axs[0].set_title("TCP Position Over Time")
+    axs[0].set_ylabel("Position (meters)")
+    axs[0].legend()
+
+    orientation_deg = np.degrees(tcp_orientation)
+    axs[1].plot(time_steps, orientation_deg[:, 0], label="X")
+    axs[1].plot(time_steps, orientation_deg[:, 1], label="Y")
+    axs[1].plot(time_steps, orientation_deg[:, 2], label="Z")
+    axs[1].set_title("TCP Orientation Over Time (Degrees)")
+    axs[1].set_ylabel("Orientation (degrees)")
+    axs[1].legend()
+
+    axs[2].plot(time_steps, gripper_width, label="Gripper Width")
+    axs[2].set_title("Gripper Opening Width Over Time")
+    axs[2].set_ylabel("Width (meters)")
+    axs[2].legend()
+
+    for i in range(arm_joint_states.shape[1]):
+        axs[3].plot(time_steps, arm_joint_states[:, i], label=f"Joint {i+1}")
+    axs[3].set_title("Arm Joint States Over Time")
+    axs[3].set_xlabel("Time Step")
+    axs[3].set_ylabel("Joint States (radians)")
+    axs[3].legend()
+
+    axs[4].step(time_steps, gripper_action, where="post")
+    axs[4].set_title("Gripper Action Over Time")
+    axs[4].set_xlabel("Time Step")
+    axs[4].set_ylabel("Action")
+    axs[4].set_yticks([-1, 1])
+    axs[4].set_yticklabels(["Close", "Open"])
+    axs[4].grid(True)
+
+    fig.suptitle(
+        f"Robot Observations for Episode {episode_name} - {instruction}",
+        fontsize=16,
+    )
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(output_path)
+    plt.close()
+    print(f"Plot saved to {output_path}")
+
+
 def main():
     home_dir = os.path.expanduser("~")
     train_dir = os.path.join(home_dir, "ws/data/calvin/task_D_D/training")
@@ -105,22 +162,36 @@ def main():
         try:
             with h5py.File(file, "r") as f:
                 rgb_static = f["rgb_static"][()]
+                rgb_gripper = f["rgb_gripper"][()]
                 actions = f["action"][()]
+                robot_obs = f["robot_obs"][()]
                 instr = f.attrs["instruction"]
 
             print(f"instruction: {instr}")
             print(f"rgb_static shape: {rgb_static.shape}")
+            print(f"rgb_gripper shape: {rgb_gripper.shape}")
             print(f"actions shape: {actions.shape}")
 
             # Ensure rgb_static is in uint8 format
             if not np.any(rgb_static):
                 rgb_static = (rgb_static * 255).astype(np.uint8)
             # Save video
-            video_output = os.path.join(vis_dir, f"{episode_name}.mp4")
+            video_output = os.path.join(vis_dir, f"{episode_name}_static_video.mp4")
             save_video(rgb_static, instr, video_output)
+
+            if not np.any(rgb_gripper):
+                rgb_gripper = (rgb_gripper * 255).astype(np.uint8)
+            # Save video
+            video_output_gr = os.path.join(vis_dir, f"{episode_name}_gripper_video.mp4")
+            save_video(rgb_gripper, instr, video_output_gr)
+
             # Plot actions
-            plot_output = os.path.join(vis_dir, f"{episode_name}.png")
-            plot_actions(actions, instr, episode_name, plot_output)
+            plot_output_action = os.path.join(vis_dir, f"{episode_name}_action.png")
+            plot_actions(actions, instr, episode_name, plot_output_action)
+
+            # plot robot obs
+            plot_output_obs = os.path.join(vis_dir, f"{episode_name}_obs.png")
+            plot_robot_obs(robot_obs, instr, episode_name, plot_output_obs)
         except Exception as e:
             print(f"Error processing {file}: {e}")
 
