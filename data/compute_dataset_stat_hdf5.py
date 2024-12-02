@@ -9,7 +9,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 
-from data.hdf5_vla_dataset import HDF5VLADataset
+from data.hdf5_vla_dataset_calvin import HDF5VLADataset
 
 
 def process_hdf5_dataset(vla_dataset):

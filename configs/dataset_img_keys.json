@@ -571,5 +571,14 @@
             "images0"
         ],
         "image_mask":[1,0,0,0]
-    }
+    },
+    "calvin_d_d": {
+        "image_keys": [
+            "rgb_static",
+            "rgb_gripper",
+            "rgb_gripper",        
+            "rgb_gripper"
+        ],
+        "image_mask":[1,1,0,0]
+    },
 }
