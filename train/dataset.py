@@ -292,6 +292,9 @@ class VLAConsumerDataset(Dataset):
                     self.image_processor.size["height"], 
                     self.image_processor.size["width"], 3), dtype=np.uint8
                 ) * background_color
+                img_proc_height = self.image_processor.size["height"]
+                img_proc_width = self.image_processor.size["width"]
+                # print(f"self.image_processor size {img_proc_height},{img_proc_width}")
                 
                 image_metas = list(self.pairwise(image_metas))
                 mask_probs = [self.cond_mask_prob] * self.num_cameras
@@ -304,8 +307,10 @@ class VLAConsumerDataset(Dataset):
                         image, valid = images[i], image_mask[i]
                         if valid and (math.prod(image.shape) > 0) and \
                             (random.random() > mask_probs[j]):
+                            # print("pushback valid img")
                             rearranged_images.append((image, True))
                         else:
+                            # print("invalid img, use background img")
                             rearranged_images.append((background_image.copy(), False))
                 
                 preprocessed_images = []

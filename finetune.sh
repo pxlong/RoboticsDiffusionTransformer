@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export NCCL_IB_HCA=mlx5_0:1,mlx5_1:1,mlx5_2:1,mlx5_3:1,mlx5_4:1,mlx5_7:1,mlx5_8:1,mlx5_9:1
 export NCCL_IB_DISABLE=0
 export NCCL_SOCKET_IFNAME=bond0
@@ -33,7 +35,7 @@ accelerate launch main.py \
     --pretrained_vision_encoder_name_or_path=$VISION_ENCODER_NAME \
     --output_dir=$OUTPUT_DIR \
     --train_batch_size=32 \
-    --sample_batch_size=64 \
+    --sample_batch_size=32 \
     --max_train_steps=200000 \
     --checkpointing_period=1000 \
     --sample_period=500 \

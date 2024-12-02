@@ -309,7 +309,8 @@ class HDF5VLADataset:
                     img = f[key][i]
                     # print(f"img shape: {img.shape}")
                     imgs.append(
-                        cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+                        # cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+                        img
                     )
                 imgs = np.stack(imgs)
                 if imgs.shape[0] < self.IMG_HISORY_SIZE:
@@ -343,9 +344,11 @@ class HDF5VLADataset:
             cam_right_wrist_mask = cam_high_mask.copy()
             # print(f"cam_right_wrist_mask: {cam_right_wrist_mask}, shape: {cam_right_wrist.shape}")
             cam_left_wrist = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
-            cam_left_wrist_mask = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
+            # cam_left_wrist = np.zeros_like(cam_right_wrist)
+            cam_left_wrist_mask = np.zeros_like(cam_right_wrist_mask)
+            # cam_left_wrist_mask = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
             # print(f"cam_left_wrist shape: {cam_left_wrist.shape}")
-            # print(f"cam_left_wrist_mask shape: {cam_left_wrist_mask.shape}")
+            # print(f"cam_left_wrist_mask: {cam_left_wrist_mask},  shape: {cam_left_wrist_mask.shape}")
 
             # Return the resulting sample
             # For unavailable images, return zero-shape arrays, i.e., (IMG_HISORY_SIZE, 0, 0, 0)

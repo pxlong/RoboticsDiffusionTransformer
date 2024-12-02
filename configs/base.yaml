@@ -2,7 +2,7 @@ common:
   # The number of historical images
   img_history_size: 2
   # The number of future actions to predict
-  action_chunk_size: 16
+  action_chunk_size: 64
   # The number of cameras to be used in the model
   num_cameras: 3
   # Dimension for state/action, we use the same space for both state and action
@@ -19,7 +19,7 @@ dataset:
   # read by the consumer with new data
 
   # The path to the buffer (at least 400GB)
-  buf_path: /path/to/buffer
+  buf_path: /mnt/petrelfs/longpinxin/data/buffer
   # The number of chunks in the buffer
   buf_num_chunks: 512
   # The number of samples (step rather than episode) in each chunk
