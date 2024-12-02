@@ -40,16 +40,16 @@ class HDF5VLADataset:
         self.CHUNK_SIZE = config["common"]["action_chunk_size"]
         self.IMG_HISORY_SIZE = config["common"]["img_history_size"]
         self.STATE_DIM = config["common"]["state_dim"]
-        print(
-            f"CHUNK_SIZE: {self.CHUNK_SIZE}, IMG_HISORY_SIZE: {self.IMG_HISORY_SIZE}, STATE_DIM: {self.STATE_DIM}"
-        )
+        # print(
+        #     f"CHUNK_SIZE: {self.CHUNK_SIZE}, IMG_HISORY_SIZE: {self.IMG_HISORY_SIZE}, STATE_DIM: {self.STATE_DIM}"
+        # )
 
         # Get each episode's len
         episode_lens = []
         for file_path in self.file_paths:
             valid, res = self.parse_hdf5_file_state_only(file_path)
             _len = res["state"].shape[0] if valid else 0
-            print(f"Episode {file_path} has length {_len}")
+            # print(f"Episode {file_path} has length {_len}")
             episode_lens.append(_len)
         self.episode_sample_weights = np.array(episode_lens) / np.sum(episode_lens)
 
@@ -61,32 +61,27 @@ class HDF5VLADataset:
 
     def convert_action(self, input):
         eef_pos = input[:, :3]
-        # eef_ang = euler_angles_to_matrix(input[:, 3:6], convention="XYZ")
-        # eef_ang = matrix_to_rotation_6d(eef_ang).numpy()
         eef_ang = convert_euler_to_rotation_matrix(input[:, 3:6])
         eef_ang = compute_ortho6d_from_rotation_matrix(eef_ang)
         gripper_open = (input[:, 6] + 1) / 2
         gripper_open = gripper_open[:, np.newaxis]
-        print(
-            f"eef_pos shape: {eef_pos.shape}, eef_ang shape: {eef_ang.shape}, gripper_open shape: {gripper_open.shape}"
-        )
+        # print(
+        #     f"eef_pos shape: {eef_pos.shape}, eef_ang shape: {eef_ang.shape}, gripper_open shape: {gripper_open.shape}"
+        # )
         output = np.concatenate([gripper_open, eef_pos, eef_ang], axis=1)
         return output
 
     def convert_robot_obs(self, input):
         eef_pos = input[:, :3]
-        print(f"eef_pos: {eef_pos}")
-        # eef_ang = euler_angles_to_matrix(input[:, 3:6], convention="XYZ")
-        # eef_ang = matrix_to_rotation_6d(eef_ang).numpy()
         eef_ang = convert_euler_to_rotation_matrix(input[:, 3:6])
         eef_ang = compute_ortho6d_from_rotation_matrix(eef_ang)
         gripper_open = (input[:, 14] + 1) / 2
         gripper_open = gripper_open[:, np.newaxis]
-        qpos = input[:, 7:14]
-        print(
-            f"eef_pos shape: {eef_pos.shape}, eef_ang shape: {eef_ang.shape}, gripper_open shape: {gripper_open.shape}, qpos shape: {qpos.shape}"
-        )
-        output = np.concatenate([qpos, gripper_open, eef_pos, eef_ang], axis=1)
+        # qpos = input[:, 7:14]
+        # print(
+        #     f"eef_pos shape: {eef_pos.shape}, eef_ang shape: {eef_ang.shape}, gripper_open shape: {gripper_open.shape}, qpos shape: {qpos.shape}"
+        # )
+        output = np.concatenate([gripper_open, eef_pos, eef_ang], axis=1)
         return output
 
     def clean_task_instruction(self, task_instruction: str, replacements: dict) -> str:
@@ -174,7 +169,7 @@ class HDF5VLADataset:
         with h5py.File(file_path, "r") as f:
             robot_obs = f["robot_obs"][()]
             num_steps = robot_obs.shape[0]
-            print(f"num_steps: {num_steps}")
+            # print(f"num_steps: {num_steps}")
             # [Optional] We drop too-short episode
             # if num_steps < 128:
             #     return False, None
@@ -183,17 +178,17 @@ class HDF5VLADataset:
             EPS = 1e-2
             # Get the idx of the first qpos whose delta exceeds the threshold
             qpos_delta = np.abs(robot_obs - robot_obs[0:1])
-            print(f"qpos_delta: {qpos_delta}")
+            # print(f"qpos_delta: {qpos_delta}")
             indices = np.where(np.any(qpos_delta > EPS, axis=1))[0]
             if len(indices) > 0:
                 first_idx = indices[0]
             else:
                 raise ValueError("Found no qpos that exceeds the threshold.")
-            print(f"first_idx: {first_idx}")
+            # print(f"first_idx: {first_idx}")
 
             # We randomly sample a timestep
             step_id = np.random.randint(first_idx - 1, num_steps)
-            print(f"step_id: {step_id}")
+            # print(f"step_id: {step_id}")
 
             # Load the instruction
             # dir_path = os.path.dirname(file_path)
@@ -213,7 +208,7 @@ class HDF5VLADataset:
             # You can also use precomputed language embeddings (recommended)
             # instruction = "path/to/lang_embed.pt"
             instruction = f.attrs["instruction"]
-            print(f"instruction before: {instruction}")
+            # print(f"instruction before: {instruction}")
             replacements = {
                 "_": " ",
                 "1f": " ",
@@ -224,7 +219,7 @@ class HDF5VLADataset:
                 "56": " ",
             }
             instruction = self.clean_task_instruction(instruction, replacements)
-            print(f"instruction after: {instruction}")
+            # print(f"instruction after: {instruction}")
 
             # Assemble the meta
             meta = {
@@ -233,7 +228,7 @@ class HDF5VLADataset:
                 "step_id": step_id,
                 "instruction": instruction,
             }
-            print(f"meta_data: {meta}")
+            # print(f"meta_data: {meta}")
 
             # Rescale gripper to [0, 1]
             # qpos = qpos / np.array(
@@ -245,16 +240,19 @@ class HDF5VLADataset:
 
             # Parse the state and action
 
-            print(f"state before: {robot_obs[step_id : step_id + 1]}")
+            # print(f"state before: {robot_obs[step_id : step_id + 1]}")
             robot_obs = self.convert_robot_obs(robot_obs)
             state = robot_obs[step_id : step_id + 1]
+
             state_std = np.std(robot_obs, axis=0)
             state_mean = np.mean(robot_obs, axis=0)
             state_norm = np.sqrt(np.mean(robot_obs**2, axis=0))
-            print(f"state after: {state}")
+            # print(f"state after: {state}, state_std: {state_std}, state_mean: {state_mean}, state_norm: {state_norm}")
 
             actions = f["action"][()]
             actions = self.convert_action(actions)
+
+            actions = actions[step_id : step_id + self.CHUNK_SIZE]
             if actions.shape[0] < self.CHUNK_SIZE:
                 # Pad the actions using the last action
                 actions = np.concatenate(
@@ -264,36 +262,15 @@ class HDF5VLADataset:
                     ],
                     axis=0,
                 )
-            print(f"actions: {actions}")
+            # print(f"actions shape: {actions.shape}")
 
             # Fill the state/action into the unified vector
             def fill_in_state(values):
-                print(f"state: {values}")
+                # print(f"state[0]: {values[0]}")
                 # Target indices corresponding to your state space
                 # In this example: 6 joints + 1 gripper for each arm
                 UNI_STATE_INDICES = (
-                    [STATE_VEC_IDX_MAPPING[f"arm_joint_{i}_pos"] for i in range(7)]
-                    + [STATE_VEC_IDX_MAPPING["gripper_open"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_pos_x"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_pos_y"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_pos_z"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_0"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_1"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_2"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_3"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_4"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_5"]]
-                )
-                print(f"UNI_STATE_INDICES: {UNI_STATE_INDICES}")
-                uni_vec = np.zeros(values.shape[:-1] + (self.STATE_DIM,))
-                print(f"uni_vec before: {uni_vec}")
-                uni_vec[..., UNI_STATE_INDICES] = values
-                print(f"uni_vec after: {uni_vec}")
-                return uni_vec
-
-            def fill_in_action(values):
-                print(f"action: {values}")
-                UNI_ACTION_INDICES = (
+                    # [STATE_VEC_IDX_MAPPING[f"arm_joint_{i}_pos"] for i in range(7)]
                     [STATE_VEC_IDX_MAPPING["gripper_open"]]
                     + [STATE_VEC_IDX_MAPPING["eef_pos_x"]]
                     + [STATE_VEC_IDX_MAPPING["eef_pos_y"]]
@@ -305,11 +282,11 @@ class HDF5VLADataset:
                     + [STATE_VEC_IDX_MAPPING["eef_angle_4"]]
                     + [STATE_VEC_IDX_MAPPING["eef_angle_5"]]
                 )
-                print(f"UNI_ACTION_INDICES: {UNI_ACTION_INDICES}")
+                # print(f"UNI_STATE_INDICES: {UNI_STATE_INDICES}")
                 uni_vec = np.zeros(values.shape[:-1] + (self.STATE_DIM,))
-                print(f"uni_vec before: {uni_vec}")
-                uni_vec[..., UNI_ACTION_INDICES] = values
-                print(f"uni_vec after: {uni_vec}")
+                # print(f"uni_vec before: {uni_vec[0]}")
+                uni_vec[..., UNI_STATE_INDICES] = values
+                # print(f"uni_vec after: {uni_vec[0]}")
                 return uni_vec
 
             state = fill_in_state(state)
@@ -319,15 +296,17 @@ class HDF5VLADataset:
             state_norm = fill_in_state(state_norm)
             # If action's format is different from state's,
             # you may implement fill_in_action()
-            actions = fill_in_action(actions)
-            print(f"actions: {actions}, shape: {actions.shape}")
+            actions = fill_in_state(actions)
+            # print(f"actions[10]: {actions[10]}, shape: {actions.shape}")
 
             # Parse the images
             def parse_img(key):
+                # print(f"key: {key}")
                 imgs = []
                 for i in range(max(step_id - self.IMG_HISORY_SIZE + 1, 0), step_id + 1):
-                    print(f"img idx: {i}")
+                    # print(f"img idx: {i}")
                     img = f[key][i]
+                    # print(f"img shape: {img.shape}")
                     imgs.append(
                         cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
                     )
@@ -344,24 +323,28 @@ class HDF5VLADataset:
                         ],
                         axis=0,
                     )
+                # print(f"imgs shape: {imgs.shape}")
                 return imgs
 
             # `cam_high` is the external camera image
             cam_high = parse_img("rgb_static")
-            print(f"cam_high shape: {cam_high.shape}")
+            # print(f"cam_high shape: {cam_high.shape}")
             # For step_id = first_idx - 1, the valid_len should be one
             valid_len = min(step_id - (first_idx - 1) + 1, self.IMG_HISORY_SIZE)
-            print(f"valid_len: {valid_len}")
+            # print(f"valid_len: {valid_len}")
             cam_high_mask = np.array(
                 [False] * (self.IMG_HISORY_SIZE - valid_len) + [True] * valid_len
             )
-            print(f"cam_high_mask: {cam_high_mask}, shape: {cam_high_mask.shape}")
+            # print(f"cam_high_mask: {cam_high_mask}, shape: {cam_high_mask.shape}")
 
             cam_right_wrist = parse_img("rgb_gripper")
-            print(f"cam_right_wrist: {cam_right_wrist}, shape: {cam_right_wrist.shape}")
+            # print(f"cam_right_wrist shape: {cam_right_wrist.shape}")
             cam_right_wrist_mask = cam_high_mask.copy()
+            # print(f"cam_right_wrist_mask: {cam_right_wrist_mask}, shape: {cam_right_wrist.shape}")
             cam_left_wrist = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
             cam_left_wrist_mask = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
+            # print(f"cam_left_wrist shape: {cam_left_wrist.shape}")
+            # print(f"cam_left_wrist_mask shape: {cam_left_wrist_mask.shape}")
 
             # Return the resulting sample
             # For unavailable images, return zero-shape arrays, i.e., (IMG_HISORY_SIZE, 0, 0, 0)
@@ -403,7 +386,7 @@ class HDF5VLADataset:
             actions = f["action"][()]
             # qpos = f["observations"]["qpos"][:]
             num_steps = robot_obs.shape[0]
-            print(f"num_steps: {num_steps}")
+            # print(f"num_steps: {num_steps}")
             # [Optional] We drop too-short episode
             # if num_steps < 128:
             #     return False, None
@@ -417,7 +400,7 @@ class HDF5VLADataset:
                 first_idx = indices[0]
             else:
                 raise ValueError("Found no qpos that exceeds the threshold.")
-            print(f"first_idx: {first_idx}")
+            # print(f"first_idx: {first_idx}")
 
             # Rescale gripper to [0, 1]
             # qpos = qpos / np.array(
@@ -435,30 +418,9 @@ class HDF5VLADataset:
             def fill_in_state(values):
                 # Target indices corresponding to your state space
                 # In this example: 6 joints + 1 gripper for each arm
-                print(f"state: {values}")
+                # print(f"state[11]: {values[11]}")
                 UNI_STATE_INDICES = (
-                    [STATE_VEC_IDX_MAPPING[f"arm_joint_{i}_pos"] for i in range(7)]
-                    + [STATE_VEC_IDX_MAPPING["gripper_open"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_pos_x"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_pos_y"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_pos_z"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_0"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_1"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_2"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_3"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_4"]]
-                    + [STATE_VEC_IDX_MAPPING["eef_angle_5"]]
-                )
-                print(f"UNI_STATE_INDICES: {UNI_STATE_INDICES}")
-                uni_vec = np.zeros(values.shape[:-1] + (self.STATE_DIM,))
-                print(f"uni_vec before: {uni_vec}")
-                uni_vec[..., UNI_STATE_INDICES] = values
-                print(f"uni_vec after: {uni_vec}")
-                return uni_vec
-
-            def fill_in_action(values):
-                print(f"action: {values}")
-                UNI_ACTION_INDICES = (
+                    # [STATE_VEC_IDX_MAPPING[f"arm_joint_{i}_pos"] for i in range(7)]
                     [STATE_VEC_IDX_MAPPING["gripper_open"]]
                     + [STATE_VEC_IDX_MAPPING["eef_pos_x"]]
                     + [STATE_VEC_IDX_MAPPING["eef_pos_y"]]
@@ -470,22 +432,22 @@ class HDF5VLADataset:
                     + [STATE_VEC_IDX_MAPPING["eef_angle_4"]]
                     + [STATE_VEC_IDX_MAPPING["eef_angle_5"]]
                 )
-                print(f"UNI_ACTION_INDICES: {UNI_ACTION_INDICES}")
+                # print(f"UNI_STATE_INDICES: {UNI_STATE_INDICES}")
                 uni_vec = np.zeros(values.shape[:-1] + (self.STATE_DIM,))
-                print(f"uni_vec before: {uni_vec}, shape:{uni_vec.shape}")
-                uni_vec[..., UNI_ACTION_INDICES] = values
-                print(f"uni_vec after: {uni_vec}")
+                # print(f"uni_vec before: {uni_vec[11]}")
+                uni_vec[..., UNI_STATE_INDICES] = values
+                # print(f"uni_vec after: {uni_vec[11]}")
                 return uni_vec
 
-            print(f"state shape {state.shape} before convert: {state}")
+            # print(f"state shape {state.shape} before convert: {state[0, :]}")
             state = self.convert_robot_obs(state)
-            print(f"state shape {state.shape} after convert: {state}")
+            # print(f"state shape {state.shape} after convert: {state[0, :]}")
             state = fill_in_state(state)
 
-            print(f"action before convert: {action}")
+            # print(f"action before convert: {action[0, :]}")
             action = self.convert_action(action)
-            print(f"action after convert: {action}")
-            action = fill_in_action(action)
+            # print(f"action after convert: {action[0, :]}")
+            action = fill_in_state(action)
 
             # Return the resulting sample
             return True, {"state": state, "action": action}
