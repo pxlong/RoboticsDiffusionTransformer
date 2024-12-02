@@ -7,7 +7,7 @@ import yaml
 import cv2
 import numpy as np
 
-from data.rotation_conversions import euler_angles_to_matrix, matrix_to_rotation_6d
+# from data.rotation_conversions import euler_angles_to_matrix, matrix_to_rotation_6d
 from data.test_6drot import (
     convert_euler_to_rotation_matrix,
     compute_ortho6d_from_rotation_matrix,
@@ -25,7 +25,8 @@ class HDF5VLADataset:
         # [Modify] The path to the HDF5 dataset directory
         # Each HDF5 file contains one episode
         # HDF5_DIR = "data/datasets/agilex/rdt_data/"
-        HDF5_DIR = "/home/longpinxin/ws/data/calvin/task_D_D/test/"
+        # HDF5_DIR = "/home/longpinxin/ws/data/calvin/task_D_D/test/"
+        HDF5_DIR = "/mnt/petrelfs/longpinxin/data/calvin/training"
         self.DATASET_NAME = "calvin_d_d"
 
         self.file_paths = []
@@ -458,5 +459,3 @@ if __name__ == "__main__":
     for i in range(len(ds)):
         print(f"Processing episode {i}/{len(ds)}...")
         ds.get_item(i)
-        if i == 0:
-            break

@@ -6,10 +6,10 @@ export NCCL_NVLS_ENABLE=0
 
 export TEXT_ENCODER_NAME="google/t5-v1_1-xxl"
 export VISION_ENCODER_NAME="google/siglip-so400m-patch14-384"
-export OUTPUT_DIR="./checkpoints/rdt-finetune-1b"
+export OUTPUT_DIR="/mnt/petrelfs/longpinxin/ckpts/rdt-finetune-1b"
 export CFLAGS="-I/usr/include"
-export LDFLAGS="-L/usr/lib/x86_64-linux-gnu"
-export CUTLASS_PATH="/path/to/cutlass"
+export LDFLAGS="-L/usr/lib/ -L/usr/lib64"
+export CUTLASS_PATH="/mnt/petrelfs/longpinxin/ws/cutlass"
 
 export WANDB_PROJECT="robotics_diffusion_transformer"
 
@@ -25,9 +25,10 @@ fi
 #     --deepspeed="./configs/zero2.json" \
 #     ...
 
-deepspeed --hostfile=hostfile.txt main.py \
+# deepspeed --hostfile=hostfile.txt main.py \
+accelerate launch main.py \
     --deepspeed="./configs/zero2.json" \
-    --pretrained_model_name_or_path="robotics-diffusion-transformer/rdt-1b" \
+    --pretrained_model_name_or_path="/mnt/petrelfs/longpinxin/data/huggingface/rdt/rdt-1b" \
     --pretrained_text_encoder_name_or_path=$TEXT_ENCODER_NAME \
     --pretrained_vision_encoder_name_or_path=$VISION_ENCODER_NAME \
     --output_dir=$OUTPUT_DIR \
