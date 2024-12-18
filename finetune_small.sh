@@ -8,7 +8,7 @@
 
 export TEXT_ENCODER_NAME="google/t5-v1_1-xxl"
 export VISION_ENCODER_NAME="google/siglip-so400m-patch14-384"
-export OUTPUT_DIR="/mnt/petrelfs/longpinxin/ckpts/rdt-finetune-1b-1203"
+export OUTPUT_DIR="/mnt/petrelfs/longpinxin/ckpts/rdt-finetune-170m"
 export CFLAGS="-I/usr/include"
 export LDFLAGS="-L/usr/lib/ -L/usr/lib64"
 export CUTLASS_PATH="/mnt/petrelfs/longpinxin/ws/cutlass"
@@ -30,14 +30,14 @@ fi
 # deepspeed --hostfile=hostfile.txt main.py \
 accelerate launch main.py \
     --deepspeed="./configs/zero2.json" \
-    --pretrained_model_name_or_path="/mnt/petrelfs/longpinxin/data/huggingface/rdt/rdt-1b" \
+    --pretrained_model_name_or_path="/mnt/petrelfs/longpinxin/data/huggingface/rdt/rdt-170m" \
     --pretrained_text_encoder_name_or_path=$TEXT_ENCODER_NAME \
     --pretrained_vision_encoder_name_or_path=$VISION_ENCODER_NAME \
     --output_dir=$OUTPUT_DIR \
     --train_batch_size=32 \
-    --sample_batch_size=32 \
-    --max_train_steps=200000 \
-    --checkpointing_period=3000 \
+    --sample_batch_size=64 \
+    --max_train_steps=150000 \
+    --checkpointing_period=1000 \
     --sample_period=500 \
     --checkpoints_total_limit=40 \
     --lr_scheduler="constant" \
@@ -48,7 +48,6 @@ accelerate launch main.py \
     --dataset_type="finetune" \
     --state_noise_snr=40 \
     --load_from_hdf5 \
-    --resume_from_checkpoint="checkpoint-84000" \
     --report_to=wandb
 
     # Use this to resume training from some previous checkpoint
