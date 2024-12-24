@@ -7,7 +7,7 @@ import yaml
 import cv2
 import numpy as np
 
-from data.rotation_conversions import euler_angles_to_matrix, matrix_to_rotation_6d
+# from data.rotation_conversions import euler_angles_to_matrix, matrix_to_rotation_6d
 from data.test_6drot import (
     convert_euler_to_rotation_matrix,
     compute_ortho6d_from_rotation_matrix,
@@ -25,7 +25,8 @@ class HDF5VLADataset:
         # [Modify] The path to the HDF5 dataset directory
         # Each HDF5 file contains one episode
         # HDF5_DIR = "data/datasets/agilex/rdt_data/"
-        HDF5_DIR = "/home/longpinxin/ws/data/calvin/task_D_D/test/"
+        # HDF5_DIR = "/home/longpinxin/ws/data/calvin/task_D_D/test/"
+        HDF5_DIR = "/mnt/petrelfs/longpinxin/data/calvin/training"
         self.DATASET_NAME = "calvin_d_d"
 
         self.file_paths = []
@@ -308,7 +309,8 @@ class HDF5VLADataset:
                     img = f[key][i]
                     # print(f"img shape: {img.shape}")
                     imgs.append(
-                        cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+                        # cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
+                        img
                     )
                 imgs = np.stack(imgs)
                 if imgs.shape[0] < self.IMG_HISORY_SIZE:
@@ -342,9 +344,11 @@ class HDF5VLADataset:
             cam_right_wrist_mask = cam_high_mask.copy()
             # print(f"cam_right_wrist_mask: {cam_right_wrist_mask}, shape: {cam_right_wrist.shape}")
             cam_left_wrist = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
-            cam_left_wrist_mask = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
+            # cam_left_wrist = np.zeros_like(cam_right_wrist)
+            cam_left_wrist_mask = np.zeros_like(cam_right_wrist_mask)
+            # cam_left_wrist_mask = np.zeros((self.IMG_HISORY_SIZE, 0, 0, 0))
             # print(f"cam_left_wrist shape: {cam_left_wrist.shape}")
-            # print(f"cam_left_wrist_mask shape: {cam_left_wrist_mask.shape}")
+            # print(f"cam_left_wrist_mask: {cam_left_wrist_mask},  shape: {cam_left_wrist_mask.shape}")
 
             # Return the resulting sample
             # For unavailable images, return zero-shape arrays, i.e., (IMG_HISORY_SIZE, 0, 0, 0)
@@ -458,5 +462,3 @@ if __name__ == "__main__":
     for i in range(len(ds)):
         print(f"Processing episode {i}/{len(ds)}...")
         ds.get_item(i)
-        if i == 0:
-            break

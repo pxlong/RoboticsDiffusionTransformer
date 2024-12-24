@@ -149,6 +149,7 @@ class RDT(nn.Module):
         x = x + self.x_pos_embed
         # Note the lang is of variable length
         lang_c = lang_c + self.lang_cond_pos_embed[:, :lang_c.shape[1]]
+        # print(f"self.img_c shape: {img_c.shape}, self.img_cond_pos_embed shape: {self.img_cond_pos_embed.shape}")
         img_c = img_c + self.img_cond_pos_embed
 
         # Forward pass
