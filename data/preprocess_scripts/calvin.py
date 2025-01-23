@@ -158,7 +158,7 @@ def process_step(step: dict) -> dict:
         
     }
     instr = step['instruction']
-    instr=  clean_task_instruction(instr, replacements)
+    instr = clean_task_instruction(instr, replacements)
     step['observation']['natural_language_instruction'] = instr
 
     return step

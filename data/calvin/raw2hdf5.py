@@ -17,6 +17,9 @@ def write_hdf5(root_dir, out_dir):
 
     f = np.load(lang_ann_path, allow_pickle=True)
     lang = f.item()["language"]["ann"]
+    # lang = np.array([x.encode('utf-8') for x in lang_raw])
+    tasks = f.item()["language"]["task"]
+    # print(f"Task: {task}")
     lang_start_end_idx = f.item()["info"]["indx"]
     num_ep = len(lang_start_end_idx)
 
@@ -35,7 +38,10 @@ def write_hdf5(root_dir, out_dir):
             rgb_static = []
             rgb_gripper = []
             instr = lang[episode_idx]
+            task = tasks[episode_idx]
+
             print(f"Instruction: {instr}")
+            print(f"Task: {task}")
 
             for step_file in step_files:
                 filepath = os.path.join(root_dir, step_file)
@@ -48,6 +54,7 @@ def write_hdf5(root_dir, out_dir):
                 rgb_static.append(f_step["rgb_static"])
                 rgb_gripper.append(f_step["rgb_gripper"])
 
+            print(f"terminate_episode: {len(action) - 1}")
             hdf5_path = os.path.join(out_dir, f"{episode_idx:07d}.hdf5")
             print(f"Writing HDF5 to {hdf5_path}")
             with h5py.File(hdf5_path, "w") as hf:
@@ -56,14 +63,15 @@ def write_hdf5(root_dir, out_dir):
                 hf.create_dataset("rgb_static", data=rgb_static)
                 hf.create_dataset("rgb_gripper", data=rgb_gripper)
                 hf.attrs["instruction"] = instr
+                hf.attrs["task"] = task
                 hf.attrs["terminate_episode"] = len(action) - 1
 
 
 home_dir = os.path.expanduser("~")
 print(home_dir)
 output_dirs = [
-    os.path.join(home_dir, "ws/data/calvin/task_D_D/training"),
-    os.path.join(home_dir, "ws/data/calvin/task_D_D/validation"),
+    os.path.join(home_dir, "ws/data/calvin/task_D_D/new/training"),
+    os.path.join(home_dir, "ws/data/calvin/task_D_D/new/validation"),
 ]
 
 root_dirs = [

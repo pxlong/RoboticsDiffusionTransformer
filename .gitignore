@@ -183,3 +183,5 @@ wandb/
 hostfile.txt
 .deepspeed_env
 results
+*.txt
+*.png
