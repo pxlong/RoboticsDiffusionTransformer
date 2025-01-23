@@ -36,8 +36,8 @@ accelerate launch main.py \
     --output_dir=$OUTPUT_DIR \
     --train_batch_size=32 \
     --sample_batch_size=32 \
-    --max_train_steps=200000 \
-    --checkpointing_period=3000 \
+    --max_train_steps=300000 \
+    --checkpointing_period=5000 \
     --sample_period=500 \
     --checkpoints_total_limit=40 \
     --lr_scheduler="constant" \
@@ -48,7 +48,7 @@ accelerate launch main.py \
     --dataset_type="finetune" \
     --state_noise_snr=40 \
     --load_from_hdf5 \
-    --resume_from_checkpoint="checkpoint-84000" \
+    --resume_from_checkpoint="checkpoint-165000" \
     --report_to=wandb
 
     # Use this to resume training from some previous checkpoint
